@@ -8,13 +8,24 @@ A user can view a daily plan showing which tasks should be completed today and w
 
 **a. Initial design**
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+- **Initial UML design**
+    The UML models PawPal+ as a small, object-oriented system that separates data storage (Owner, Pet, Task), planning logic (Scheduler), and planning output (SchedulePlan). Owners contain pets, pets contain tasks, and the Scheduler uses this data to generate a daily plan based on task priority and available time.
+
+- **Classes and responsibilities**
+    Owner: Stores owner info and daily available time; manages pets and aggregates all tasks across pets.
+    Pet: Stores pet details; manages that pet’s tasks and computes total task time.
+    Task: Represents a single care task with duration, category, and priority; converts priority into a numeric value for scheduling.
+    Scheduler: Contains the scheduling logic; sorts tasks by priority, fits them into available time, and generates a plan.
+    SchedulePlan: Holds the result of scheduling, including scheduled tasks, skipped tasks, time usage, and a short explanation.
 
 **b. Design changes**
 
-- Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
+- Yes
+
+- Added Methods:
+    Owner.get_pet_by_id(pet_id)
+    Allows looking up a specific pet by ID instead of iterating through the list manually
+    Needed for: UI display, remove operations, and Task→Pet navigation
 
 ---
 

@@ -30,6 +30,13 @@ class Owner:
         """Remove a pet by its ID."""
         pass
 
+    def get_pet_by_id(self, pet_id: int) -> 'Pet | None':
+        """
+        Find a pet by its ID.
+        Returns None if no pet with that ID exists.
+        """
+        pass
+
     def get_all_tasks(self) -> List['Task']:
         """Collect all tasks from all pets owned by this owner."""
         pass
@@ -52,11 +59,22 @@ class Pet:
     tasks: List['Task'] = field(default_factory=list)
 
     def add_task(self, task: 'Task') -> None:
-        """Add a care task for this pet."""
+        """
+        Add a care task for this pet.
+        Validates that task.pet_id matches this pet's ID.
+        """
+        # TODO: Validate task.pet_id == self.id before adding
         pass
 
     def remove_task(self, task_id: int) -> None:
         """Remove a task by its ID."""
+        pass
+
+    def get_task_by_id(self, task_id: int) -> 'Task | None':
+        """
+        Find a task by its ID.
+        Returns None if no task with that ID exists.
+        """
         pass
 
     def get_tasks(self) -> List['Task']:
@@ -85,7 +103,9 @@ class Task:
         """
         Convert priority string to numeric value for sorting.
         Returns: 3 for high, 2 for medium, 1 for low
+        Defaults to 1 (low) if priority is invalid.
         """
+        # TODO: Use PRIORITY_VALUES.get(self.priority.lower(), 1)
         pass
 
 
@@ -189,3 +209,34 @@ TASK_CATEGORIES = [
     "Enrichment",
     "Training"
 ]
+
+
+# =============================================================================
+# OPTIONAL: ID GENERATOR UTILITY
+# =============================================================================
+
+class IDGenerator:
+    """
+    Simple ID generator for Owner, Pet, and Task objects.
+    Optional helper to avoid manual ID management.
+    """
+    _counters = {"owner": 0, "pet": 0, "task": 0}
+
+    @classmethod
+    def next_id(cls, entity_type: str) -> int:
+        """
+        Generate next unique ID for the given entity type.
+
+        Args:
+            entity_type: One of "owner", "pet", or "task"
+
+        Returns:
+            Next available ID number
+        """
+        cls._counters[entity_type] += 1
+        return cls._counters[entity_type]
+
+    @classmethod
+    def reset(cls) -> None:
+        """Reset all counters (useful for testing)."""
+        cls._counters = {"owner": 0, "pet": 0, "task": 0}
