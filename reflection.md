@@ -2,6 +2,10 @@
 
 ## 1. System Design
 
+A user can add and manage information about their pet
+A user can add pet care tasks such as walks, feeding, or medication
+A user can view a daily plan showing which tasks should be completed today and why
+
 **a. Initial design**
 
 - Briefly describe your initial UML design.
