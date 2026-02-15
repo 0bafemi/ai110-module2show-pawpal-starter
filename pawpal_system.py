@@ -24,26 +24,32 @@ class Owner:
 
     def add_pet(self, pet: 'Pet') -> None:
         """Add a pet to the owner's collection."""
-        pass
+        self.pets.append(pet)
 
     def remove_pet(self, pet_id: int) -> None:
         """Remove a pet by its ID."""
-        pass
+        self.pets = [pet for pet in self.pets if pet.id != pet_id]
 
     def get_pet_by_id(self, pet_id: int) -> 'Pet | None':
         """
         Find a pet by its ID.
         Returns None if no pet with that ID exists.
         """
-        pass
+        for pet in self.pets:
+            if pet.id == pet_id:
+                return pet
+        return None
 
     def get_all_tasks(self) -> List['Task']:
         """Collect all tasks from all pets owned by this owner."""
-        pass
+        all_tasks = []
+        for pet in self.pets:
+            all_tasks.extend(pet.tasks)
+        return all_tasks
 
     def get_total_task_time(self) -> int:
         """Calculate the total duration of all tasks across all pets."""
-        pass
+        return sum(task.duration_minutes for task in self.get_all_tasks())
 
 
 @dataclass
@@ -63,27 +69,33 @@ class Pet:
         Add a care task for this pet.
         Validates that task.pet_id matches this pet's ID.
         """
-        # TODO: Validate task.pet_id == self.id before adding
-        pass
+        if task.pet_id != self.id:
+            raise ValueError(
+                f"Task pet_id ({task.pet_id}) doesn't match Pet id ({self.id})"
+            )
+        self.tasks.append(task)
 
     def remove_task(self, task_id: int) -> None:
         """Remove a task by its ID."""
-        pass
+        self.tasks = [task for task in self.tasks if task.id != task_id]
 
     def get_task_by_id(self, task_id: int) -> 'Task | None':
         """
         Find a task by its ID.
         Returns None if no task with that ID exists.
         """
-        pass
+        for task in self.tasks:
+            if task.id == task_id:
+                return task
+        return None
 
     def get_tasks(self) -> List['Task']:
         """Return all tasks for this pet."""
-        pass
+        return self.tasks
 
     def get_total_task_time(self) -> int:
         """Calculate the total duration of all tasks for this pet."""
-        pass
+        return sum(task.duration_minutes for task in self.tasks)
 
 
 @dataclass
@@ -105,8 +117,7 @@ class Task:
         Returns: 3 for high, 2 for medium, 1 for low
         Defaults to 1 (low) if priority is invalid.
         """
-        # TODO: Use PRIORITY_VALUES.get(self.priority.lower(), 1)
-        pass
+        return PRIORITY_VALUES.get(self.priority.lower(), 1)
 
 
 @dataclass
@@ -123,15 +134,23 @@ class SchedulePlan:
 
     def get_summary(self) -> str:
         """Return a formatted summary of the schedule."""
-        pass
+        summary_lines = [
+            f"Daily Schedule Summary",
+            f"Time Available: {self.time_available} minutes",
+            f"Scheduled: {self.get_scheduled_count()} tasks ({self.time_used} min)",
+            f"Skipped: {self.get_skipped_count()} tasks",
+            f"",
+            f"{self.explanation}"
+        ]
+        return "\n".join(summary_lines)
 
     def get_scheduled_count(self) -> int:
         """Return the number of scheduled tasks."""
-        pass
+        return len(self.scheduled_tasks)
 
     def get_skipped_count(self) -> int:
         """Return the number of skipped tasks."""
-        pass
+        return len(self.skipped_tasks)
 
 
 # =============================================================================
@@ -155,7 +174,34 @@ class Scheduler:
         Returns:
             SchedulePlan object containing scheduled/skipped tasks and explanation
         """
-        pass
+        # Step 1: Collect all tasks from all pets
+        all_tasks = owner.get_all_tasks()
+
+        # Step 2: Sort tasks by priority (high to low)
+        sorted_tasks = self._sort_tasks_by_priority(all_tasks)
+
+        # Step 3: Fit tasks into available time
+        scheduled, skipped = self._fit_tasks_to_time(
+            sorted_tasks,
+            owner.available_time_minutes
+        )
+
+        # Step 4: Calculate time used
+        time_used = sum(task.duration_minutes for task in scheduled)
+
+        # Step 5: Generate explanation
+        explanation = self._generate_explanation(
+            scheduled, skipped, time_used, owner.available_time_minutes
+        )
+
+        # Step 6: Return plan
+        return SchedulePlan(
+            scheduled_tasks=scheduled,
+            skipped_tasks=skipped,
+            explanation=explanation,
+            time_used=time_used,
+            time_available=owner.available_time_minutes
+        )
 
     def _sort_tasks_by_priority(self, tasks: List[Task]) -> List[Task]:
         """
@@ -168,7 +214,7 @@ class Scheduler:
         Returns:
             Sorted list of tasks (high priority first)
         """
-        pass
+        return sorted(tasks, key=lambda task: task.get_priority_value(), reverse=True)
 
     def _fit_tasks_to_time(
         self,
@@ -186,7 +232,56 @@ class Scheduler:
         Returns:
             Tuple of (scheduled_tasks, skipped_tasks)
         """
-        pass
+        scheduled = []
+        skipped = []
+        time_remaining = available_time
+
+        for task in tasks:
+            if task.duration_minutes <= time_remaining:
+                # Task fits! Schedule it
+                scheduled.append(task)
+                time_remaining -= task.duration_minutes
+            else:
+                # Task doesn't fit, skip it
+                skipped.append(task)
+
+        return scheduled, skipped
+
+    def _generate_explanation(
+        self,
+        scheduled: List[Task],
+        skipped: List[Task],
+        time_used: int,
+        time_available: int
+    ) -> str:
+        """
+        Generate a human-readable explanation of the schedule.
+        Private helper method.
+
+        Args:
+            scheduled: List of scheduled tasks
+            skipped: List of skipped tasks
+            time_used: Total minutes scheduled
+            time_available: Owner's available time
+
+        Returns:
+            Explanation string
+        """
+        if not scheduled and not skipped:
+            return "No tasks to schedule today. Enjoy your free time!"
+
+        if not skipped:
+            return (
+                f"All {len(scheduled)} tasks fit! "
+                f"Used {time_used}/{time_available} minutes. "
+                f"Tasks were prioritized by importance (high > medium > low)."
+            )
+
+        return (
+            f"Scheduled {len(scheduled)} high-priority tasks ({time_used} min). "
+            f"Skipped {len(skipped)} lower-priority tasks due to time constraints. "
+            f"Consider rescheduling skipped tasks for tomorrow or reducing task durations."
+        )
 
 
 # =============================================================================
