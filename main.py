@@ -169,6 +169,87 @@ def main():
         print(f"  [{pet2.name}] {task.time} - {task.name}")
     print()
 
+    # ========== DEMONSTRATE RECURRING TASKS ==========
+    print("=" * 60)
+    print("DEMONSTRATION: Recurring Tasks")
+    print("=" * 60)
+
+    # Create a daily recurring task
+    from datetime import datetime
+    today = datetime.now().date().strftime("%Y-%m-%d")
+
+    daily_task = Task(
+        id=IDGenerator.next_id("task"),
+        name="Daily medication",
+        category="Medication",
+        duration_minutes=5,
+        priority="high",
+        pet_id=pet1.id,
+        time="09:00",
+        recurrence="daily",
+        due_date=today
+    )
+
+    print(f"\nCreated daily recurring task:")
+    print(f"  Name: {daily_task.name}")
+    print(f"  Recurrence: {daily_task.recurrence}")
+    print(f"  Due date: {daily_task.due_date}")
+    print(f"  Completed: {daily_task.is_completed}")
+
+    # Mark it complete (should reschedule automatically)
+    print(f"\n--- Marking task complete ---")
+    daily_task.mark_complete()
+
+    print(f"\nAfter completion:")
+    print(f"  Due date: {daily_task.due_date} (should be tomorrow)")
+    print(f"  Completed: {daily_task.is_completed} (should be False - reset for tomorrow)")
+
+    # Create a weekly recurring task
+    weekly_task = Task(
+        id=IDGenerator.next_id("task"),
+        name="Weekly grooming",
+        category="Grooming",
+        duration_minutes=30,
+        priority="medium",
+        pet_id=pet2.id,
+        time="10:00",
+        recurrence="weekly",
+        due_date=today
+    )
+
+    print(f"\nCreated weekly recurring task:")
+    print(f"  Name: {weekly_task.name}")
+    print(f"  Recurrence: {weekly_task.recurrence}")
+    print(f"  Due date: {weekly_task.due_date}")
+
+    weekly_task.mark_complete()
+    print(f"\nAfter completion:")
+    print(f"  Due date: {weekly_task.due_date} (should be +7 days)")
+    print(f"  Completed: {weekly_task.is_completed}")
+
+    # Create a one-time task for comparison
+    once_task = Task(
+        id=IDGenerator.next_id("task"),
+        name="Vet appointment",
+        category="Medication",
+        duration_minutes=60,
+        priority="high",
+        pet_id=pet1.id,
+        time="14:00",
+        recurrence="once",
+        due_date=today
+    )
+
+    print(f"\nCreated one-time task:")
+    print(f"  Name: {once_task.name}")
+    print(f"  Recurrence: {once_task.recurrence}")
+
+    once_task.mark_complete()
+    print(f"\nAfter completion:")
+    print(f"  Completed: {once_task.is_completed} (should stay True)")
+    print(f"  Due date: {once_task.due_date} (should be unchanged)")
+    print()
+
     # Generate schedule
     plan = scheduler.generate_plan(owner)
 

@@ -5,6 +5,7 @@ This module contains the core classes for managing pets, tasks, and scheduling.
 
 from dataclasses import dataclass, field
 from typing import List, Tuple
+from datetime import datetime, timedelta
 
 
 # =============================================================================
@@ -111,6 +112,8 @@ class Task:
     priority: str  # "high", "medium", or "low"
     pet_id: int
     time: str = "09:00"  # Time in HH:MM format
+    recurrence: str = "once"  # Options: "once", "daily", "weekly"
+    due_date: str = ""  # Date in YYYY-MM-DD format
     is_completed: bool = False
 
     def get_priority_value(self) -> int:
@@ -122,8 +125,46 @@ class Task:
         return PRIORITY_VALUES.get(self.priority.lower(), 1)
 
     def mark_complete(self) -> None:
-        """Mark this task as completed."""
+        """
+        Mark this task as completed.
+        If task is recurring (daily/weekly), automatically reschedule for next occurrence.
+        """
+        # Mark as complete first
         self.is_completed = True
+
+        # Check if task is recurring
+        if self.recurrence == "once":
+            # One-time task, stays completed
+            return
+
+        # Handle recurring tasks - reschedule for next occurrence
+        if self.recurrence in ["daily", "weekly"]:
+            self._reschedule_recurring_task()
+
+    def _reschedule_recurring_task(self) -> None:
+        """
+        Private helper method to reschedule recurring tasks.
+        Calculates next due date and resets completion status.
+        """
+        # Parse the current due_date string into a datetime object
+        if not self.due_date:
+            # If no due_date set, use today
+            current_date = datetime.now().date()
+        else:
+            current_date = datetime.strptime(self.due_date, "%Y-%m-%d").date()
+
+        # Calculate next occurrence based on recurrence pattern
+        if self.recurrence == "daily":
+            next_date = current_date + timedelta(days=1)
+        elif self.recurrence == "weekly":
+            next_date = current_date + timedelta(weeks=1)  # weeks=1 is same as days=7
+        else:
+            # Unknown recurrence type, don't reschedule
+            return
+
+        # Update task for next occurrence
+        self.due_date = next_date.strftime("%Y-%m-%d")
+        self.is_completed = False  # Reset to incomplete
 
 
 @dataclass
