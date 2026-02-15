@@ -110,6 +110,7 @@ class Task:
     duration_minutes: int
     priority: str  # "high", "medium", or "low"
     pet_id: int
+    is_completed: bool = False
 
     def get_priority_value(self) -> int:
         """
@@ -118,6 +119,10 @@ class Task:
         Defaults to 1 (low) if priority is invalid.
         """
         return PRIORITY_VALUES.get(self.priority.lower(), 1)
+
+    def mark_complete(self) -> None:
+        """Mark this task as completed."""
+        self.is_completed = True
 
 
 @dataclass
