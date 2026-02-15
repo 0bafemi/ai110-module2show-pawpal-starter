@@ -110,6 +110,7 @@ class Task:
     duration_minutes: int
     priority: str  # "high", "medium", or "low"
     pet_id: int
+    time: str = "09:00"  # Time in HH:MM format
     is_completed: bool = False
 
     def get_priority_value(self) -> int:
@@ -287,6 +288,57 @@ class Scheduler:
             f"Skipped {len(skipped)} lower-priority tasks due to time constraints. "
             f"Consider rescheduling skipped tasks for tomorrow or reducing task durations."
         )
+
+    def sort_by_time(self, tasks: List[Task]) -> List[Task]:
+        """
+        Sort tasks by their time attribute (earliest first).
+
+        Args:
+            tasks: List of tasks to sort
+
+        Returns:
+            Sorted list of tasks ordered by time (HH:MM format)
+        """
+        return sorted(tasks, key=lambda task: task.time)
+
+    def filter_by_status(self, tasks: List[Task], is_completed: bool) -> List[Task]:
+        """
+        Filter tasks by completion status.
+
+        Args:
+            tasks: List of tasks to filter
+            is_completed: True for completed tasks, False for pending
+
+        Returns:
+            Filtered list of tasks
+        """
+        return [task for task in tasks if task.is_completed == is_completed]
+
+    def filter_by_pet_name(self, tasks: List[Task], pet_name: str, owner: Owner) -> List[Task]:
+        """
+        Filter tasks by pet name.
+
+        Args:
+            tasks: List of tasks to filter
+            pet_name: Name of the pet
+            owner: Owner object to look up pet by name
+
+        Returns:
+            Filtered list of tasks for the specified pet
+        """
+        # Find the pet by name
+        target_pet = None
+        for pet in owner.pets:
+            if pet.name == pet_name:
+                target_pet = pet
+                break
+
+        # If pet not found, return empty list
+        if target_pet is None:
+            return []
+
+        # Filter tasks by pet_id
+        return [task for task in tasks if task.pet_id == target_pet.id]
 
 
 # =============================================================================

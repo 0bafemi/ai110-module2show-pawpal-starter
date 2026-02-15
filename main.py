@@ -45,14 +45,15 @@ def main():
     print(f"Pet 2: {pet2.name} ({pet2.species}, {pet2.age} years old)")
     print()
 
-    # Create tasks for Mochi (Dog)
+    # Create tasks for Mochi (Dog) - times scrambled!
     task1 = Task(
         id=IDGenerator.next_id("task"),
         name="Morning walk",
         category="Walk",
         duration_minutes=30,
         priority="high",
-        pet_id=pet1.id
+        pet_id=pet1.id,
+        time="08:00"
     )
 
     task2 = Task(
@@ -61,7 +62,8 @@ def main():
         category="Feeding",
         duration_minutes=10,
         priority="high",
-        pet_id=pet1.id
+        pet_id=pet1.id,
+        time="07:30"  # Earlier than task1!
     )
 
     task3 = Task(
@@ -70,17 +72,19 @@ def main():
         category="Walk",
         duration_minutes=30,
         priority="medium",
-        pet_id=pet1.id
+        pet_id=pet1.id,
+        time="17:00"  # Much later
     )
 
-    # Create tasks for Luna (Cat)
+    # Create tasks for Luna (Cat) - also scrambled
     task4 = Task(
         id=IDGenerator.next_id("task"),
         name="Feed dinner",
         category="Feeding",
         duration_minutes=10,
         priority="high",
-        pet_id=pet2.id
+        pet_id=pet2.id,
+        time="18:00"
     )
 
     task5 = Task(
@@ -89,7 +93,8 @@ def main():
         category="Enrichment",
         duration_minutes=20,
         priority="medium",
-        pet_id=pet2.id
+        pet_id=pet2.id,
+        time="14:00"  # Earlier in day
     )
 
     task6 = Task(
@@ -98,7 +103,8 @@ def main():
         category="Grooming",
         duration_minutes=15,
         priority="low",
-        pet_id=pet2.id
+        pet_id=pet2.id,
+        time="20:00"  # Last task of day
     )
 
     # Add tasks to pets
@@ -116,8 +122,54 @@ def main():
     print(f"  Total time needed: {owner.get_total_task_time()} minutes")
     print()
 
-    # Generate schedule
+    # ========== DEMONSTRATE SORTING BY TIME ==========
+    print("=" * 60)
+    print("DEMONSTRATION: Sort Tasks by Time")
+    print("=" * 60)
+
     scheduler = Scheduler()
+    all_tasks = owner.get_all_tasks()
+
+    print(f"\nOriginal order ({len(all_tasks)} tasks):")
+    for task in all_tasks:
+        pet = owner.get_pet_by_id(task.pet_id)
+        print(f"  {task.time} - {task.name} ({pet.name if pet else 'Unknown'})")
+
+    sorted_tasks = scheduler.sort_by_time(all_tasks)
+    print(f"\nSorted by time:")
+    for task in sorted_tasks:
+        pet = owner.get_pet_by_id(task.pet_id)
+        print(f"  {task.time} - {task.name} ({pet.name if pet else 'Unknown'})")
+    print()
+
+    # ========== DEMONSTRATE FILTERING ==========
+    print("=" * 60)
+    print("DEMONSTRATION: Filter Tasks")
+    print("=" * 60)
+
+    # Filter by status (all should be incomplete initially)
+    pending = scheduler.filter_by_status(all_tasks, is_completed=False)
+    print(f"\nPending tasks: {len(pending)}")
+
+    # Mark one task complete
+    task2.mark_complete()
+    completed = scheduler.filter_by_status(all_tasks, is_completed=True)
+    print(f"Completed tasks after marking task2: {len(completed)}")
+    for task in completed:
+        print(f"  [DONE] {task.name}")
+
+    # Filter by pet
+    mochi_tasks = scheduler.filter_by_pet_name(all_tasks, "Mochi", owner)
+    luna_tasks = scheduler.filter_by_pet_name(all_tasks, "Luna", owner)
+    print(f"\nMochi's tasks: {len(mochi_tasks)}")
+    for task in mochi_tasks:
+        print(f"  [{pet1.name}] {task.time} - {task.name}")
+    print(f"\nLuna's tasks: {len(luna_tasks)}")
+    for task in luna_tasks:
+        print(f"  [{pet2.name}] {task.time} - {task.name}")
+    print()
+
+    # Generate schedule
     plan = scheduler.generate_plan(owner)
 
     # Display results
